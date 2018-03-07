@@ -25,6 +25,8 @@ namespace NuPortalWebservice
         [WebMethod]
         public string LoginInfo(string UserName, string Password, int Operation)
         {
+            SqlConnection con1 = new SqlConnection();
+            SqlConnection con2 = new SqlConnection();
             SqlConnection con = new SqlConnection();
             try
             {
