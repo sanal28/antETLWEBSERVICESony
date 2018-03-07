@@ -1,0 +1,595 @@
+﻿using NuPortalWebservice.Common_Library;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using Newtonsoft.Json;
+
+namespace NuPortalWebservice
+{
+    /// <summary>
+    /// Summary description for NuPortalRequestService
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
+    // [System.Web.Script.Services.ScriptService]
+    public class NuPortalRequestService : System.Web.Services.WebService
+    {
+        public string connection { get; set; }
+
+        [WebMethod]
+        public bool CreateRequest(string RequestText, int RequestType, string AttachmentUrl, DateTime RequestedDate,
+            DateTime RequestedToDate, DateTime CreatedDate, int CreatedEmpId, DateTime ModifiedDate, int ModifiedEmpId,
+            int Status)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.setRequests;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.RequestType, RequestType);
+                cmd.Parameters.AddWithValue(RequestConstants.RequestText, RequestText);
+                cmd.Parameters.AddWithValue(RequestConstants.RequestedDate, RequestedDate);
+                cmd.Parameters.AddWithValue(RequestConstants.RequestedToDate, RequestedToDate);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedDate, CreatedDate);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedEmpId, CreatedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.ModifiedDate, ModifiedDate);
+                cmd.Parameters.AddWithValue(RequestConstants.ModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.AttachmentPath, AttachmentUrl);
+                cmd.Parameters.AddWithValue(RequestConstants.Status, Status);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                return SendEmail(dataReader, 1, false);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string SearchRequest(string RequestText, string RequestType, string RequestedDate, string GroupName,
+            string ReqStatus, int Requester)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.setRequests;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                if (RequestType != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.RequestTypeName, RequestType);
+                if (RequestText != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.RequestText, RequestText);
+                if (RequestedDate != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.RequestedDateVal, RequestedDate);
+                if (GroupName != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.GroupName, GroupName);
+                if (ReqStatus != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.TicketStatus, ReqStatus);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedEmpId, Requester);
+                cmd.Parameters.AddWithValue(RequestConstants.paramOperation, 2);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string SearchAllOrReim(float amount, DateTime StartDate, DateTime EndDate, int TicketStatusId,
+            string Description, int Requester, int CategoryTypeId, int CategoryId)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.UspSearchAllowanceReimbursement;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                if (amount != 0)
+                    cmd.Parameters.AddWithValue(RequestConstants.Amount, amount);
+                if (StartDate.Year != 1753)
+                    cmd.Parameters.AddWithValue(RequestConstants.StartDate, StartDate);
+                if (EndDate.Year != 1753)
+                    cmd.Parameters.AddWithValue(RequestConstants.EndDate, EndDate);
+                if (TicketStatusId != 0)
+                    cmd.Parameters.AddWithValue(RequestConstants.paramTicketStatusId, TicketStatusId);
+                if (CategoryId != 0)
+                    cmd.Parameters.AddWithValue(RequestConstants.CategoryId, CategoryId);
+                if (Description != string.Empty)
+                    cmd.Parameters.AddWithValue(RequestConstants.Description, Description);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedEmpId, Requester);
+                cmd.Parameters.AddWithValue(RequestConstants.CategoryTypeId, CategoryTypeId);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+
+        public bool SendEmail(IDataReader dataReader, int TypeValues, bool IsLeave)
+        {
+            try
+            {
+                bool IsSuccess = false;
+                string toAddress = string.Empty;
+                string ccAddress = string.Empty;
+                string ReqType = string.Empty;
+                string Name = string.Empty;
+                string StartDate = string.Empty;
+                string EndDate = string.Empty;
+                string Requester = string.Empty;
+                string TaskStatus = string.Empty;
+                while (dataReader.Read())
+                {
+                    IsSuccess = true;
+                    if (Convert.ToString(dataReader["ToAddress"]) != string.Empty)
+                        toAddress = toAddress + Convert.ToString(dataReader["ToAddress"]) + ",";
+                    if (Convert.ToString(dataReader["ccAddress"]) != string.Empty)
+                        ccAddress = ccAddress + Convert.ToString(dataReader["ccAddress"]) + ",";
+                    if (Convert.ToString(dataReader["TypeName"]) != string.Empty)
+                        ReqType = Convert.ToString(dataReader["TypeName"]);
+                    if (Convert.ToString(dataReader["Name"]) != string.Empty)
+                        Name = Convert.ToString(dataReader["Name"]);
+                    if (IsLeave)
+                    {
+                        StartDate = Convert.ToString(dataReader["StartDate"]);
+                        EndDate = Convert.ToString(dataReader["EndDate"]);
+                        Requester = Convert.ToString(dataReader["Requester"]);
+                    }
+                    if (TypeValues == 14)
+                    {
+                        if (Convert.ToString(dataReader["Status"]) != string.Empty)
+                            TaskStatus = Convert.ToString(dataReader["Status"]);
+                    }
+                }
+                if (IsSuccess)
+                {
+                    string bccAddress = string.Empty;
+                    string subject = string.Empty, msgBody = string.Empty;
+                    ccAddress = ccAddress.TrimEnd(',');
+                    if (TypeValues == 11 && !string.IsNullOrEmpty(ccAddress))
+                    {
+                        toAddress = toAddress + ccAddress;
+                        ccAddress = string.Empty;
+                    }
+                    toAddress = toAddress.TrimEnd(',');
+
+                    switch (TypeValues)
+                    {
+                        case 1:
+                            subject = "Request for " + ReqType;
+                            if (IsLeave)
+                                msgBody = "Hi,<br/><br/>Request from " + Name + " for " + ReqType + " from " + StartDate + " to " + EndDate + " is waiting for your approval.<br />" +
+                                          "Click the below link to open the ticket<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            else
+                                msgBody = "Hi,<br/><br/>Request from " + Name + " for " + ReqType + " is waiting for your approval.<br />" +
+                                          "Click the below link to open the ticket<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 2:
+                            subject = "Request for " + ReqType + " was Approved";
+                            if (IsLeave)
+                                msgBody = "Hi,<br/><br/>Request from " + Requester + " for " + ReqType + " from " + StartDate + " to " + EndDate + " was Approved by " + Name;
+                            else
+                                msgBody = "Hi,<br/><br/>Request for " + ReqType + " was Approved by " + Name;
+                            break;
+                        case 3:
+                            subject = "Request for " + ReqType + " was Rejected";
+                            if (IsLeave)
+                                msgBody = "Hi,<br/><br/>Request from " + Requester + " for " + ReqType + " from " + StartDate + " to " + EndDate + " was Rejected by " + Name;
+                            else
+                                msgBody = "Hi,<br/><br/>Request for " + ReqType + " was Rejected by " + Name;
+                            break;
+                        case 4:
+                            subject = "Request for " + ReqType + " was cancelled";
+                            if (IsLeave)
+                                msgBody = "Hi,<br/><br/>Request for " + ReqType + " from " + StartDate + " to " + EndDate + " was cancelled by " + Requester;
+                            else
+                                msgBody = "Hi,<br/><br/>Request for " + ReqType + " was successfully cancelled.";
+                            break;
+                        case 5:
+                            subject = "New Announcement";
+                            msgBody = "Hi,<br/><br/>An Announcement has been added to the portal.<br/>" +
+                                      "Click the below link to view the Announcement<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 6:
+                            subject = "New Event";
+                            msgBody = "Hi,<br/><br/>An Event has been added to the portal.<br/>" +
+                                      "Click the below link to view the Event<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 7:
+                            subject = "Update Event";
+                            msgBody = "Hi,<br/><br/>An Event has been updated in the portal.<br/>" +
+                                      "Click the below link to view the Event<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 8:
+                            subject = "Cancel Event";
+                            msgBody = "Hi,<br/><br/>An Event has been cancelled from the portal.<br/>" +
+                                      "Click the below link to view the Event<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 9:
+                            subject = "New Opening";
+                            msgBody = "Hi,<br/><br/>An Opening has been added to the portal.<br/>" +
+                                      "Click the below link to view the Opening<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 10:
+                            subject = "New Training";
+                            msgBody = "Hi,<br/><br/>A Training has been added to the portal.<br/>" +
+                                      "Click the below link to view the Training<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 11:
+                            subject = "New Document";
+                            msgBody = "Hi,<br/><br/>A Document has been added to the portal.<br/>" +
+                                      "Click the below link to view the Document <br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 12:
+                            subject = "New Task";
+                            msgBody = "Hi,<br/><br/>A Task has been added to the portal.<br/>" +
+                                      "Click the below link to view the Task<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 13:
+                            subject = "Task Update";
+                            msgBody = "Hi,<br/><br/>A Task has been updated in the portal.<br/>" +
+                                      "Click the below link to view the Task<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                        case 14:
+                            subject = "Task Status Update";
+                            msgBody = "Hi,<br/><br/>" + Name + " changed the Task Status for " + ReqType + " to " + TaskStatus + "<br/>" +
+                                      "Click the below link to view the Task<br/><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                            break;
+                    }
+                    Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+                    if (comfun.SendEmail(toAddress, ccAddress, bccAddress, subject, msgBody))
+                        return true;
+                    else
+                        return false;
+
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        [WebMethod]
+        public bool AddAllowanceReimbursement(float Amount, string Attachments, DateTime StartDate, DateTime EndDate, string Description,
+            int CategoryId, int CategoryTypeId, DateTime CreatedDate, int CreatedEmpId, DateTime ModifiedDate, int ModifiedEmpId,
+            int Status)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                //CategoryTypeId :- Allowance - 1, Reimbursement - 2
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.setAllOrReim;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.Amount, Amount);
+                cmd.Parameters.AddWithValue(RequestConstants.AttachmentPath, Attachments);
+                cmd.Parameters.AddWithValue(RequestConstants.StartDate, StartDate);
+                cmd.Parameters.AddWithValue(RequestConstants.EndDate, EndDate);
+                cmd.Parameters.AddWithValue(RequestConstants.Description, Description);
+                cmd.Parameters.AddWithValue(RequestConstants.CategoryId, CategoryId);
+                cmd.Parameters.AddWithValue(RequestConstants.CategoryTypeId, CategoryTypeId);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedDate, CreatedDate);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedEmpId, CreatedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.ModifiedDate, ModifiedDate);
+                cmd.Parameters.AddWithValue(RequestConstants.ModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.Status, Status);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                return SendEmail(dataReader, 1, false);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool CancelRequest(int RequestId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.EmployeeOperation;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramId, RequestId);
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                return SendEmail(dataReader, 4, false);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        //Create Leave Request
+
+        [WebMethod]
+        public bool CreateLeaveRequest(int EmpId, int EmpIdRequester, int EmpAssignedTo, DateTime LeaveStartDate,
+            DateTime LeaveEndDate, int StatusId, int FKLeaveTransId, int LeaveTypeId,
+            int LeaveAppliedDays, int CreatedEmpId, int ModifiedEmpId, string Reason, int companyId, int IsCreate)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.UspLeaveTransaction;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_EmpId, EmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_EmpIdRequester, EmpIdRequester);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_EmpAssignedTo, EmpAssignedTo);
+                cmd.Parameters.AddWithValue(RequestConstants.paramLeaveStartDate, LeaveStartDate);
+                cmd.Parameters.AddWithValue(RequestConstants.paramLeaveEndDate, LeaveEndDate);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_LeaveTypeId, LeaveTypeId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_StatusId, StatusId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_LeaveTransId, FKLeaveTransId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramLeaveAppliedDays, LeaveAppliedDays);
+                cmd.Parameters.AddWithValue(RequestConstants.CreatedEmpId, CreatedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.ModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramCompanyId, companyId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramReason, Reason);
+                cmd.Parameters.AddWithValue(RequestConstants.paramIsCreate, IsCreate);
+                IDataReader dataReader = cmd.ExecuteReader();
+                return SendEmail(dataReader, 1, true);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        //Select My Leave Requests
+
+        [WebMethod]
+        public bool UpdateOrCancelMyLeave(int RequestId, int EmpIdRequester, int CompanyId, int LeaveTypeId, int Operation, int StatusId)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.UspCancelLeave;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_Id, RequestId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramEmpId, EmpIdRequester);
+                cmd.Parameters.AddWithValue(RequestConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_LeaveTypeId, LeaveTypeId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramOperation, Operation);
+                cmd.Parameters.AddWithValue(RequestConstants.paramStatusId, StatusId);
+                IDataReader dataReader = cmd.ExecuteReader();
+                if (StatusId != 6)
+                    return SendEmail(dataReader, StatusId, true);
+                else if (dataReader.Read())
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        //Select available and availed leaves
+
+        [WebMethod]
+        public string GetAvailableAvailedLeaves(int CompanyId, int EmpId)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.UspAvailableLeaves;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_CompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramEmpId, EmpId);
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable(Constants.employeeProfileCompletedTable);
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool UpdateRequestStatus(int RequestId, int EmpId, int StatusId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = RequestConstants.UspUpdateStatus;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(RequestConstants.paramFK_Id, RequestId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramEmpId, EmpId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramStatusId, StatusId);
+                cmd.Parameters.AddWithValue(RequestConstants.paramOperation, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                if (dataReader.FieldCount > 0)
+                    return SendEmail(dataReader, StatusId, false);
+                else
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool GetForgotPassword(string UserName, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.getLoginInfo;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramUserName, UserName);
+                cmd.Parameters.AddWithValue(Constants.ParamPassword, "");
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                string test = "";
+                while (dataReader.Read())
+                {
+                    string password = Convert.ToString(dataReader["Password"]);
+                    Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+                    if (comfun.SendEmail(UserName, "", "", "Password for Login", "Your password for login is " + password +
+                        "<br /> Click the below link for login <br /><a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>"))
+                        return true;
+                    else
+                        return false;
+
+                }
+                return false;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+    }
+}

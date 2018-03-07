@@ -1,0 +1,602 @@
+﻿using Newtonsoft.Json;
+using NuPortalWebservice.Common_Library;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Script.Serialization;
+using System.Web.Services;
+
+namespace NuPortalWebservice
+{
+    /// <summary>
+    /// Summary description for NuPortalHRService
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
+    // [System.Web.Script.Services.ScriptService]
+    public class NuPortalHRService : System.Web.Services.WebService
+    {
+        public string connection { get; set; }
+        [WebMethod]
+        public string AnnouncementOrEventsOper(int Id, string Attachments, int createdEmpId, string Description, DateTime EndDate, int CompanyId,
+                                               int ModifiedEmpID, DateTime StartDate, int Status, string Title, string StartTime, string EndTime,
+                                               int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            bool result = false;
+            NuPortalRequestService requestService = new NuPortalRequestService();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveAnnOrEvents;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, Id);
+                cmd.Parameters.AddWithValue(HRConstants.paramAttachments, Attachments);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, createdEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramDescription, Description);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndDate, EndDate);
+                cmd.Parameters.AddWithValue(HRConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpID);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStartDate, StartDate);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(HRConstants.paramTitle, Title);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStartTime, StartTime);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndTime, EndTime);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                if (Operation == 1 || Operation == 2 || Operation == 4)
+                {
+                    if (Operation == 1)
+                        result = requestService.SendEmail(dataReader, 5, false);
+                    else if (Operation == 2)
+                        result = requestService.SendEmail(dataReader, 6, false);
+                    else if (Operation == 4)
+                        result = requestService.SendEmail(dataReader, 7, false);
+                    if (result)
+                    {
+                        return JsonConvert.SerializeObject("{\"AnnouncementId\" : 1}", Formatting.Indented);
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+                else
+                {
+                    DataTable dataTable = new DataTable();
+                    dataTable.Load(dataReader);
+                    if (dataTable.Rows.Count > 0)
+                    {
+                        return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string SaveTraining(int Id, string Attachments, int createdEmpId, string Details, DateTime EndDate, string EndTime, int CompanyId, int TrainerId,
+                                   int IsAssessmentSent, int ModifiedEmpID, DateTime StartDate, string StartTime, int Status, string Subject, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            NuPortalRequestService requestService = new NuPortalRequestService();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveTraining;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, Id);
+                cmd.Parameters.AddWithValue(HRConstants.paramAttachments, Attachments);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, createdEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramDetails, Details);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndDate, EndDate);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndTime, EndTime);
+                cmd.Parameters.AddWithValue(HRConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(HRConstants.paramTrainerId, TrainerId);
+                cmd.Parameters.AddWithValue(HRConstants.paramIsAssessmentSent, IsAssessmentSent);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpID);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStartDate, StartDate);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStartTime, StartTime);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(HRConstants.paramSubject, Subject);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                if (Operation == 1)
+                {
+                    if (requestService.SendEmail(dataReader, 10, false))
+                        return JsonConvert.SerializeObject("{\"TrainingId\" : 1}", Formatting.Indented);
+                    else
+                        return "";
+                }
+                else
+                {
+                    DataTable dataTable = new DataTable();
+                    dataTable.Load(dataReader);
+                    if (dataTable.Rows.Count > 0)
+                    {
+                        return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string UpdateTrainingTicket(int Id, int RespondedBy, int Trainee, int TrainingId, int ModifiedEmpID, int Status, int TicketStatusId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspCreateTrainingTicket;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, Id);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, Trainee);
+                cmd.Parameters.AddWithValue(HRConstants.ParamRespondedBy, RespondedBy);
+                cmd.Parameters.AddWithValue(HRConstants.ParamTrainee, Trainee);
+                cmd.Parameters.AddWithValue(HRConstants.ParamTrainingId, TrainingId);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpID);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(HRConstants.ParamTicketStatus, TicketStatusId);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string GetDataForCalendar(int Id, DateTime StartDate, DateTime EndDate, int Operation)
+        {
+
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspEventsForCalendar;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, Id);
+                cmd.Parameters.AddWithValue(HRConstants.paramStartDate, StartDate);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndDate, EndDate);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                var dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally { con.Close(); }
+        }
+
+        [WebMethod]
+        public string SaveTrainingAssessment(int AbilityToCompleteTaskOnTime, int AbilityToLearnNewConcept, int createdEmpId, int AbilityToUnderstandConcept,
+                                             string AreasOfDevelopment, int AssistanceRequiredDuringCodeBuilding, string Comments, int TrainingTicketId,
+                                             int Status, int ImplementationOfNewlyLearntConcept)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveTrainingAssessment;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.ParamAbilityToCompleteTaskOnTime,  AbilityToCompleteTaskOnTime);
+                cmd.Parameters.AddWithValue(HRConstants.ParamAbilityToLearnNewConcept, AbilityToLearnNewConcept);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, createdEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamAbilityToUnderstandConcept, AbilityToUnderstandConcept);
+                cmd.Parameters.AddWithValue(HRConstants.ParamAreasOfDevelopment, AreasOfDevelopment);
+                cmd.Parameters.AddWithValue(HRConstants.ParamAssistanceRequiredDuringCodeBuilding, AssistanceRequiredDuringCodeBuilding);
+                cmd.Parameters.AddWithValue(HRConstants.ParamComments, Comments);
+                cmd.Parameters.AddWithValue(HRConstants.ParamTrainingTicketId, TrainingTicketId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(HRConstants.ParamImplementationOfNewlyLearntConcept, ImplementationOfNewlyLearntConcept);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string SaveOfficePoll(string Title, string Note, int CompanyId, string AttachmentPath, int CreatedEmpId, int ModifiedEmpId,
+            DateTime EndDate, int IsCancelled, int Status, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveOfficePolls;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramTitle, Title);
+                cmd.Parameters.AddWithValue(HRConstants.ParamNote, Note);
+                cmd.Parameters.AddWithValue(HRConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(HRConstants.paramAttachments, AttachmentPath);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, CreatedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamEndDate, EndDate);
+                cmd.Parameters.AddWithValue(HRConstants.ParamIsCancelled, IsCancelled);
+                cmd.Parameters.AddWithValue(HRConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public string SaveQuestion(int PollId, int QuestionTypeId, string Question, int CreatedEmpId, int ModifiedEmpId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveOfficePolls;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.ParamFK_PollId, PollId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamFK_QuestionTypeId, QuestionTypeId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamQuestion, Question);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, CreatedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool SetOptionsForQuestion(string jsonOptions)
+        {
+            //[{"OptionText":"Option1","FK_QuestionId":2,"ModifiedEmpID":1084,"CreatedEmpID":1084},
+            //{ "OptionText":"Option2","FK_QuestionId":2,"ModifiedEmpID":1084,"CreatedEmpID":1084},
+            //{ "OptionText":"Option3","FK_QuestionId":2,"ModifiedEmpID":1084,"CreatedEmpID":1084},
+            //{ "OptionText":"Option4","FK_QuestionId":2,"ModifiedEmpID":1084,"CreatedEmpID":1084}]
+            CommonFunctions comfun = new CommonFunctions();
+            SqlConnection con = new SqlConnection();
+            connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+            con.ConnectionString = connection;
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            con.Open();
+            using (SqlTransaction sqlTransaction = con.BeginTransaction())
+            {
+                try
+                {
+                    using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                    {
+                        //Set the database table name
+                        sqlBulkCopy.DestinationTableName = HRConstants.tblPollOptions;
+
+                        //[OPTIONAL]: Map the DataTable columns with that of the database table
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.OptionText, HRConstants.OptionText);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.FK_QuestionId, HRConstants.FK_QuestionId);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.CreatedEmpID, HRConstants.CreatedEmpID);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.ModifiedEmpID, HRConstants.ModifiedEmpID);
+                        sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonOptions));
+                        sqlTransaction.Commit();
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    sqlTransaction.Rollback();
+                    return false;
+                }
+                finally
+                {
+                    con.Close();
+                    comfun = null;
+                }
+            }
+        }
+        [WebMethod]
+        public bool SaveTbPollResult(int QuestionId, string TextValue, int CreatedEmpId, int ModifiedEmpId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveTbResults;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, QuestionId);
+                cmd.Parameters.AddWithValue(HRConstants.ParamTextValue, TextValue);
+                cmd.Parameters.AddWithValue(HRConstants.ParamCreatedEmpID, CreatedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool SaveOptionsPollResult(string jsonOptions)
+        {
+            CommonFunctions comfun = new CommonFunctions();
+            SqlConnection con = new SqlConnection();
+            connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+            con.ConnectionString = connection;
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            con.Open();
+            using (SqlTransaction sqlTransaction = con.BeginTransaction())
+            {
+                try
+                {
+                    using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                    {
+                        //Set the database table name
+                        sqlBulkCopy.DestinationTableName = HRConstants.tblPollOptionResult;
+
+                        //[OPTIONAL]: Map the DataTable columns with that of the database table
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.FK_QuestionId, HRConstants.FK_QuestionId);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.FK_OptionId, HRConstants.FK_OptionId);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.CreatedEmpID, HRConstants.CreatedEmpID);
+                        sqlBulkCopy.ColumnMappings.Add(HRConstants.ModifiedEmpID, HRConstants.ModifiedEmpID);
+                        sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonOptions));
+                        sqlTransaction.Commit();
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    sqlTransaction.Rollback();
+                    return false;
+                }
+                finally
+                {
+                    con.Close();
+                    comfun = null;
+                }
+            }
+        }
+
+        [WebMethod]
+        public bool SavePollPublishType(int QuestionId, int PublishTypeId,string TextVal, int ModifiedEmpId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveOfficePolls;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.paramId, QuestionId);
+                cmd.Parameters.AddWithValue(HRConstants.PublishTypeId, PublishTypeId);
+                cmd.Parameters.AddWithValue(HRConstants.TextValue, TextVal);
+                cmd.Parameters.AddWithValue(HRConstants.paramModifiedEmpId, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+        [WebMethod]
+        public string DeleteOfficePoll(int PollId,int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            IDataReader dataReader;
+            DataTable dataTable = new DataTable();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = HRConstants.UspSaveOfficePolls;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(HRConstants.ParamFK_PollId, PollId);
+                cmd.Parameters.AddWithValue(HRConstants.paramOperation, Operation);
+
+                dataReader = cmd.ExecuteReader();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+                dataReader = null;
+                dataTable = null;
+            }
+        }
+    }
+}

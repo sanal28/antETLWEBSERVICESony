@@ -1,0 +1,350 @@
+﻿using Newtonsoft.Json;
+using NuPortalWebservice.Common_Library;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+
+namespace NuPortalWebservice
+{
+    /// <summary>
+    /// Summary description for NuPortalAdminService
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
+    // [System.Web.Script.Services.ScriptService]
+    public class NuPortalAdminService : System.Web.Services.WebService
+    {
+        public string connection { get; set; }
+        [WebMethod]
+        public string SaveNewRequestTypes(int Id, string categoryName, string categoryType, int CategoryTypeId,
+            int CompanyId, int GroupId, int CreatedEmpID, int ModifiedEmpID, int Status, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = AdminConstants.UspSaveCategory;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(AdminConstants.paramId, Id);
+                cmd.Parameters.AddWithValue(AdminConstants.paramCategoryName, categoryName);
+                cmd.Parameters.AddWithValue(AdminConstants.paramCategoryType, categoryType);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamCategoryTypeId, CategoryTypeId);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamCreatedEmpID, CreatedEmpID);
+                cmd.Parameters.AddWithValue(AdminConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(AdminConstants.paramGroupId, GroupId);
+                cmd.Parameters.AddWithValue(AdminConstants.paramModifiedEmpID, ModifiedEmpID);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(AdminConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool SetGroupMembers(int ResourceId, int EmpId, string jsonGroupDetails)
+        {
+            Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+            if (comfun.DeleteRecords(ResourceId, 44))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = AdminConstants.tblGroupMembers;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colEmpId, AdminConstants.colEmpId);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colGroupId, AdminConstants.colGroupId);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.CreatedEmpID, AdminConstants.CreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.ModifiedEmpID, AdminConstants.ModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonGroupDetails));
+                            sqlTransaction.Commit();
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                        comfun = null;
+                    }
+                }
+            }
+            return false;
+        }
+        [WebMethod]
+        public string SetDeptGroups(string Name, int CompanyId, int DeptId, int Status, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = AdminConstants.UspSaveDeptGroups;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(AdminConstants.paramName, Name);
+                cmd.Parameters.AddWithValue(AdminConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(AdminConstants.paramDepartmentId, DeptId);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(AdminConstants.paramOperation, Operation);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool UpdateDepts(int CompanyId, int EmpId, string jsonDeptDetails)
+        {
+            Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+            if (comfun.DeleteRecords(CompanyId, 46))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = AdminConstants.tblDepartment;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colDepartmentName, AdminConstants.colDepartmentName);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colCompanyId, AdminConstants.colCompanyId);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.CreatedEmpID, AdminConstants.CreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.ModifiedEmpID, AdminConstants.ModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonDeptDetails));
+                            sqlTransaction.Commit();
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                        comfun = null;
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public bool UpdateGroups(int CompanyId, int EmpId, string jsonGroupDetails)
+        {
+            Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+            if (comfun.DeleteRecords(CompanyId, 47))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = AdminConstants.tblGroup;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colGroupName, AdminConstants.colGroupName);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colCompanyId, AdminConstants.colCompanyId);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.colDepartmentId, AdminConstants.colDepartmentId);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.CreatedEmpID, AdminConstants.CreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(AdminConstants.ModifiedEmpID, AdminConstants.ModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonGroupDetails));
+                            sqlTransaction.Commit();
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                        comfun = null;
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public string CustomizationByAdmin(string JsonData, int CompanyId, int Status, int EmpId, int CategoryTypeId, int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                string XmlData = "<Category>";
+                DataTable data = JsonConvert.DeserializeObject<DataTable>(JsonData);
+                foreach (DataRow item in data.Rows)
+                {
+                    XmlData = XmlData + "<Oper><Name>" + item["Name"] + "</Name><ID>" + item["Id"] + "</ID></Oper>";
+                }
+                XmlData = XmlData + "</Category>";
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = AdminConstants.UspSaveCategory;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(AdminConstants.paramXml, XmlData);
+                cmd.Parameters.AddWithValue(AdminConstants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamStatus, Status);
+                cmd.Parameters.AddWithValue(AdminConstants.ModifiedEmpID, EmpId);
+                cmd.Parameters.AddWithValue(AdminConstants.ParamCategoryTypeId, CategoryTypeId);
+                cmd.Parameters.AddWithValue(AdminConstants.paramOperation, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        //[WebMethod]
+        //public string CustomizeGroups(string JsonData, int CompanyId, int Status, int EmpId, int Operation)
+        //{
+        //    SqlConnection con = new SqlConnection();
+        //    try
+        //    {
+        //        string XmlData = "<Category>";
+        //        DataTable data = JsonConvert.DeserializeObject<DataTable>(JsonData);
+        //        foreach (DataRow item in data.Rows)
+        //        {
+        //            XmlData = XmlData + "<Oper><Name>" + item["GroupName"] + "</Name><DeptID>" + item["DeptId"] + "</DeptID></Oper>";
+        //        }
+        //        XmlData = XmlData + "</Category>";
+        //        con = new SqlConnection();
+        //        connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+        //        con.ConnectionString = connection;
+        //        SqlCommand cmd = new SqlCommand();
+        //        cmd.Connection = con;
+        //        cmd.CommandText = AdminConstants.UspSaveCategory;
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.CommandTimeout = 300;
+        //        con.Open();
+        //        cmd.Parameters.AddWithValue(AdminConstants.paramXml, XmlData);
+        //        cmd.Parameters.AddWithValue(AdminConstants.paramCompanyId, CompanyId);
+        //        cmd.Parameters.AddWithValue(AdminConstants.ParamStatus, Status);
+        //        cmd.Parameters.AddWithValue(AdminConstants.ModifiedEmpID, EmpId);
+        //        cmd.Parameters.AddWithValue(AdminConstants.paramOperation, Operation);
+        //        IDataReader dataReader = cmd.ExecuteReader();
+        //        DataTable dataTable = new DataTable();
+        //        dataTable.Load(dataReader);
+        //        if (dataTable.Rows.Count > 0)
+        //        {
+        //            return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+        //        }
+        //        else
+        //        {
+        //            return "";
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return "";
+        //    }
+        //    finally
+        //    {
+        //        con.Close();
+        //    }
+        //}
+    }
+}

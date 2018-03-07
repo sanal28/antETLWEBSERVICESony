@@ -1,0 +1,730 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.Script.Serialization;
+using System.Web.Services;
+
+namespace NuPortalWebservice
+{
+    /// <summary>
+    /// Summary description for NuPortalEmployeeService
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
+    // [System.Web.Script.Services.ScriptService]
+    public class NuPortalEmployeeService : System.Web.Services.WebService
+    {
+        public string connection { get; set; }
+        Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+
+        [WebMethod]
+        public bool CreateEmployee(string FirstName, string LastName, string Title, string EmployeeCode, int JobTitle, int Manager, string ProfilePicUrl,
+                                   string QuotesPictureUrl, string BackGroundPicUrl, DateTime HireDate, DateTime ConfirmationDate, string WorkEMail, int OfficeLocation,
+                                   string WorkLocation, int EmptTypeId, DateTime RelievingDate, int CompanyId,int FkEmpStatus, DateTime CreatedDate, DateTime ModifiedDate, int CreatedEmpId, 
+                                   int ModifiedEmpId,int WeekOffDays,string StartTime,string EndTime,string QuotesText)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.setEmployeeInfo;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramFirstName, FirstName);
+                cmd.Parameters.AddWithValue(Constants.ParamLastName, LastName);
+                cmd.Parameters.AddWithValue(Constants.paramTitle, Title);
+                cmd.Parameters.AddWithValue(Constants.ParamEmployeeCode, EmployeeCode);
+                cmd.Parameters.AddWithValue(Constants.paramJobTitle, JobTitle);
+                cmd.Parameters.AddWithValue(Constants.ParamManager, Manager);
+                cmd.Parameters.AddWithValue(Constants.paramProfilePicUrl, ProfilePicUrl);
+                cmd.Parameters.AddWithValue(Constants.paramQuotesPictureUrl, QuotesPictureUrl);
+                cmd.Parameters.AddWithValue(Constants.paramBackGroundPicUrl, BackGroundPicUrl);
+                cmd.Parameters.AddWithValue(Constants.ParamHireDate, HireDate);
+                cmd.Parameters.AddWithValue(Constants.paramConfirmationDate, ConfirmationDate);
+                cmd.Parameters.AddWithValue(Constants.ParamWorkEmail, WorkEMail);
+                cmd.Parameters.AddWithValue(Constants.paramOfficeLocation, OfficeLocation);
+                cmd.Parameters.AddWithValue(Constants.ParamWorkLocation, WorkLocation);
+                cmd.Parameters.AddWithValue(Constants.paramEmptTypeId, EmptTypeId);
+                cmd.Parameters.AddWithValue(Constants.ParamRelievingDate, RelievingDate);
+                cmd.Parameters.AddWithValue(Constants.paramCompanyId, CompanyId);
+                cmd.Parameters.AddWithValue(Constants.paramFkEmpStatus, FkEmpStatus);
+                cmd.Parameters.AddWithValue(Constants.ParamCreatedDate, CreatedDate);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedDate, ModifiedDate);
+                cmd.Parameters.AddWithValue(Constants.ParamCreatedEmpID, CreatedEmpId);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedEmpID, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(Constants.paramWeekOffDays, WeekOffDays);
+                cmd.Parameters.AddWithValue(Constants.ParamStartTime, StartTime);
+                cmd.Parameters.AddWithValue(Constants.paramEndTime, EndTime);
+                cmd.Parameters.AddWithValue(Constants.paramQuotesText, QuotesText);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+                if (dataReader.Read())
+                {
+                    string toAddress = dataReader[1].ToString();
+                    string ccAddress = dataReader[0].ToString();
+                    string bccAddress = dataReader[1].ToString();
+                    string subject = "Portal Account Information";
+                    string msgBody = "UserName : " + dataReader[1].ToString() + "<br/>Password : " + dataReader[2].ToString()+
+                        "<br/> Link : <a href='http://portal.nuvento.com/'>http://portal.nuvento.com/</a>";
+                    Common_Library.CommonFunctions comfun = new Common_Library.CommonFunctions();
+                    if (comfun.SendEmail(toAddress, ccAddress, bccAddress, subject, msgBody))
+                        return true;
+                    else
+                        return false;
+                }
+                else
+                {
+
+                    return false;
+                }
+                
+               }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool UpdateEmployee(int employeeId,string FirstName, string LastName, string Title, string EmployeeCode, int JobTitle, int Manager, string ProfilePicUrl,
+                                   string QuotesPictureUrl, string BackGroundPicUrl, DateTime HireDate, DateTime ConfirmationDate, string WorkEMail, int OfficeLocation,
+                                   string WorkLocation, int EmptTypeId, DateTime RelievingDate,  DateTime ModifiedDate,  int ModifiedEmpId, int WeekOffDays, string StartTime, 
+                                   string EndTime, string QuotesText, int FkEmpStatus)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.updateEmployeeInfo;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramFKEmpId, employeeId);
+                cmd.Parameters.AddWithValue(Constants.paramFirstName, FirstName);
+                cmd.Parameters.AddWithValue(Constants.ParamLastName, LastName);
+                cmd.Parameters.AddWithValue(Constants.paramTitle, Title);
+                cmd.Parameters.AddWithValue(Constants.ParamEmployeeCode, EmployeeCode);
+                cmd.Parameters.AddWithValue(Constants.paramJobTitle, JobTitle);
+                cmd.Parameters.AddWithValue(Constants.ParamManager, Manager);
+                cmd.Parameters.AddWithValue(Constants.paramProfilePicUrl, ProfilePicUrl);
+                cmd.Parameters.AddWithValue(Constants.paramQuotesPictureUrl, QuotesPictureUrl);
+                cmd.Parameters.AddWithValue(Constants.paramBackGroundPicUrl, BackGroundPicUrl);
+                cmd.Parameters.AddWithValue(Constants.ParamHireDate, HireDate);
+                cmd.Parameters.AddWithValue(Constants.paramConfirmationDate, ConfirmationDate);
+                cmd.Parameters.AddWithValue(Constants.ParamWorkEmail, WorkEMail);
+                cmd.Parameters.AddWithValue(Constants.paramOfficeLocation, OfficeLocation);
+                cmd.Parameters.AddWithValue(Constants.ParamWorkLocation, WorkLocation);
+                cmd.Parameters.AddWithValue(Constants.paramEmptTypeId, EmptTypeId);
+                cmd.Parameters.AddWithValue(Constants.ParamRelievingDate, RelievingDate);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedDate, ModifiedDate);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedEmpID, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(Constants.paramWeekOffDays, WeekOffDays);
+                cmd.Parameters.AddWithValue(Constants.ParamStartTime, StartTime);
+                cmd.Parameters.AddWithValue(Constants.paramEndTime, EndTime);
+                cmd.Parameters.AddWithValue(Constants.paramQuotesText, QuotesText);
+                cmd.Parameters.AddWithValue(Constants.paramFkEmpStatus, FkEmpStatus);
+
+                var dataReader = cmd.ExecuteReader();
+                if(dataReader.Read())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool SetPersonalInfo(int EmpId, string Address1, string City1, string State1, string Country1, string ZipCode1, string Phone1, string Address2,
+                                   string City2, string State2, string Country2, string ZipCode2, string Phone2, string EmergencyPhone, string EmailId, DateTime DOB,
+                                   string Gender, string Nationality, string BloodGroup,
+                                   DateTime CreatedDate, DateTime ModifiedDate, int CreatedEmpId, int ModifiedEmpId)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.setPersonalInfo;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramFKEmpId, EmpId);
+                cmd.Parameters.AddWithValue(Constants.ParamAddress1, Address1);
+                cmd.Parameters.AddWithValue(Constants.paramCity1, City1);
+                cmd.Parameters.AddWithValue(Constants.ParamState1, State1);
+                cmd.Parameters.AddWithValue(Constants.paramCountry1, Country1);
+                cmd.Parameters.AddWithValue(Constants.ParamZipCode1, ZipCode1);
+                cmd.Parameters.AddWithValue(Constants.paramPhone1, Phone1);
+                cmd.Parameters.AddWithValue(Constants.ParamAddress2, Address2);
+                cmd.Parameters.AddWithValue(Constants.paramCity2, City2);
+                cmd.Parameters.AddWithValue(Constants.ParamState2, State2);
+                cmd.Parameters.AddWithValue(Constants.paramCountry2, Country2);
+                cmd.Parameters.AddWithValue(Constants.ParamZipCode2, ZipCode2);
+                cmd.Parameters.AddWithValue(Constants.paramPhone2, Phone2);
+
+                cmd.Parameters.AddWithValue(Constants.ParamEmergencyPhone, EmergencyPhone);
+                cmd.Parameters.AddWithValue(Constants.paramEmailId, EmailId);
+                cmd.Parameters.AddWithValue(Constants.ParamDOB, DOB);
+
+                cmd.Parameters.AddWithValue(Constants.paramGender, Gender);
+                cmd.Parameters.AddWithValue(Constants.paramNationality, Nationality);
+                cmd.Parameters.AddWithValue(Constants.paramBloodGroup, BloodGroup);
+
+                cmd.Parameters.AddWithValue(Constants.ParamCreatedDate, CreatedDate);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedDate, ModifiedDate);
+                cmd.Parameters.AddWithValue(Constants.ParamCreatedEmpID, CreatedEmpId);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedEmpID, ModifiedEmpId);
+
+                IDataReader dataReader = cmd.ExecuteReader();
+
+                if (dataReader.Read())
+                {
+                    
+                        return true;
+                    
+                }
+                else
+                    return false;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally { con.Close(); }
+
+        }
+        [WebMethod]
+        public bool SetAcademic(int Id,string jsonAcademic)
+        {
+            if (comfun.DeleteRecords(Id, 6))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = Constants.tblAcademic;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EmpId, Constants.colEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.School, Constants.colSchool);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Course, Constants.colCourse);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Major, Constants.colMajor);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Minor, Constants.colMinor);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.PerMarks, Constants.colPerMarks);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.University, Constants.colUniversity);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CourseCompletion, Constants.colCourseCompletion);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.YearofPassing, Constants.colYearofPassing);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Grade, Constants.colGrade);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.AttachmentPaths, Constants.colAttachmentPaths);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedDate, Constants.colCreatedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedDate, Constants.colModifiedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedEmpID, Constants.colCreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedEmpID, Constants.colModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonAcademic));
+                            sqlTransaction.Commit();
+
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public bool SetIdentityDetails(int Id, string jsonIdentityDetails)
+        {
+            if (comfun.DeleteRecords(Id, 7))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = Constants.tblIdentityDetails;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EmpId, Constants.colEmpId);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.IdentityType, Constants.colIdentityType);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.IdentityNumber, Constants.colIdentityNumber);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.IdentityFilePath, Constants.colIdentityFilePath);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedDate, Constants.colCreatedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedDate, Constants.colModifiedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedEmpID, Constants.colCreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedEmpID, Constants.colModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonIdentityDetails));
+                            sqlTransaction.Commit();
+
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public bool SetExperience(int Id, string jsonExperience)
+        {
+            if (comfun.DeleteRecords(Id, 8))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = Constants.tblExperience;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EmpId, Constants.colEmpId);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CompanyName, Constants.colCompanyName);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Designation, Constants.colDesignation);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.TeamSize, Constants.colTeamSize);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Roles, Constants.colRoles);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.NoOfMonths, Constants.colNoOfMonths);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ReasonForLeaving, Constants.colReasonForLeaving);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.StartDate, Constants.colStartDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EndDate, Constants.colEndDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Technologies, Constants.colTechnologies);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.Domain, Constants.colDomain);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.AttachmentPaths, Constants.colAttachmentPaths);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedDate, Constants.colCreatedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedDate, Constants.colModifiedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedEmpID, Constants.colCreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedEmpID, Constants.colModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonExperience));
+                            sqlTransaction.Commit();
+
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public bool SetCompetency(int Id, string jsonCompetency)
+        {
+            if (comfun.DeleteRecords(Id, 9))
+            {
+                if (jsonCompetency == "[]")
+                    return true;
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = Constants.tblCompetency;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EmpId, Constants.colEmpId);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CompetencyType, Constants.colCompetencyType);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CompetencyValue, Constants.colCompetencyValue);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedDate, Constants.colCreatedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedDate, Constants.colModifiedDate);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.CreatedEmpID, Constants.colCreatedEmpID);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.ModifiedEmpID, Constants.colModifiedEmpID);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonCompetency));
+                            sqlTransaction.Commit();
+
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+                }
+            }
+            return false;
+        }
+
+        [WebMethod]
+        public string SelectEmployeeInfo(int Id,int Operation)
+        {
+           
+            SqlConnection con = new SqlConnection();
+            NuPortalRequestService requestService = new NuPortalRequestService();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.EmployeeOperation;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramId, Id);
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+
+                var dataReader = cmd.ExecuteReader();
+                if (Operation == 37)
+                {
+                    if (requestService.SendEmail(dataReader, 8, false))
+                        return JsonConvert.SerializeObject("{\"EventId\" : 1}", Formatting.Indented);
+                    else
+                        return "";
+                }
+                else
+                {
+                    DataTable dataTable = new DataTable(Constants.ddlTable);
+                    dataTable.Load(dataReader);
+                    if (dataTable.Rows.Count > 0)
+                    {
+                        List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                        Dictionary<string, object> row;
+                        foreach (DataRow dr in dataTable.Rows)
+                        {
+                            row = new Dictionary<string, object>();
+                            foreach (DataColumn col in dataTable.Columns)
+                            {
+                                row.Add(col.ColumnName, dr[col]);
+                            }
+                            rows.Add(row);
+                        }
+                        return serializer.Serialize(rows);
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally { con.Close(); }
+        }
+
+        [WebMethod]
+        public string GetEmployeeProfileCompleted(int EmpId)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.getEmployeeProfileCompleted;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramId, EmpId);
+                var dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable(Constants.employeeProfileCompletedTable);
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                    Dictionary<string, object> row;
+                    foreach (DataRow dr in dataTable.Rows)
+                    {
+                        row = new Dictionary<string, object>();
+                        foreach (DataColumn col in dataTable.Columns)
+                        {
+                            row.Add(col.ColumnName, dr[col]);
+                        }
+                        rows.Add(row);
+                    }
+                    return serializer.Serialize(rows);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally { con.Close(); }
+        }
+
+        [WebMethod]
+        public string ManagerAutoComplete(int Id,string FirstName,int EmpId,int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.getAutoComplete;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 300;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramEmpName, FirstName);
+                cmd.Parameters.AddWithValue(Constants.paramCompId, Id);
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+                cmd.Parameters.AddWithValue(Constants.paramFKEmpId, EmpId);
+                var dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable(Constants.employeeProfileCompletedTable);
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                    Dictionary<string, object> row;
+                    foreach (DataRow dr in dataTable.Rows)
+                    {
+                        row = new Dictionary<string, object>();
+                        foreach (DataColumn col in dataTable.Columns)
+                        {
+                            row.Add(col.ColumnName, dr[col]);
+                        }
+                        rows.Add(row);
+                    }
+                    return serializer.Serialize(rows);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally { con.Close(); }
+        }
+        [WebMethod]
+        public string UpdateExitInterview(int Id, DateTime RelievingDate, string Attachments,string Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.UspUpdateExitInterview;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramId, Id);
+                cmd.Parameters.AddWithValue(Constants.ParamRelievingDate, RelievingDate);
+                if (Attachments == string.Empty)
+                    cmd.Parameters.AddWithValue(Constants.paramAttachments, DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue(Constants.paramAttachments, Attachments);
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+        [WebMethod]
+        public string UpdateEmployeeRating(int Id,int RatedTo, int RatedBy,int Rating, int CreatedEmpID, 
+            int ModifiedEmpId, int Status, int RatingFactorId,int Operation)
+        {
+            SqlConnection con = new SqlConnection();
+            try
+            {
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = Constants.UspUpdateEmpRating;
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue(Constants.paramId, Id);
+                cmd.Parameters.AddWithValue(Constants.paramFKEmpId, RatedTo);
+                cmd.Parameters.AddWithValue(Constants.paramRatedBy, RatedBy);
+                cmd.Parameters.AddWithValue(Constants.ParamCreatedEmpID, CreatedEmpID);
+                cmd.Parameters.AddWithValue(Constants.paramModifiedEmpID, ModifiedEmpId);
+                cmd.Parameters.AddWithValue(Constants.paramStatus, Status); 
+                cmd.Parameters.AddWithValue(Constants.paramRatingFactor, RatingFactorId);
+                cmd.Parameters.AddWithValue(Constants.paramRating, Rating);
+                cmd.Parameters.AddWithValue(Constants.paramOperId, Operation);
+                IDataReader dataReader = cmd.ExecuteReader();
+                DataTable dataTable = new DataTable();
+                dataTable.Load(dataReader);
+                if (dataTable.Rows.Count > 0)
+                {
+                    return JsonConvert.SerializeObject(dataTable, Formatting.Indented);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        [WebMethod]
+        public bool SetEmpGallery(int Id, string jsonEmpGallery)
+        {
+            if (comfun.DeleteRecords(Id, 92))
+            {
+                SqlConnection con = new SqlConnection();
+                connection = ConfigurationManager.ConnectionStrings[Constants.connection].ConnectionString;
+                con.ConnectionString = connection;
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                con.Open();
+                using (SqlTransaction sqlTransaction = con.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con, SqlBulkCopyOptions.Default, sqlTransaction))
+                        {
+                            //Set the database table name
+                            sqlBulkCopy.DestinationTableName = Constants.tblEmpGallery;
+
+                            //[OPTIONAL]: Map the DataTable columns with that of the database table
+                            sqlBulkCopy.ColumnMappings.Add(Constants.EmpId, Constants.colEmpId);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.colQuotesUrl, Constants.colQuotesUrl);
+                            sqlBulkCopy.ColumnMappings.Add(Constants.colQuotesText, Constants.colQuotesText);
+                            sqlBulkCopy.WriteToServer(comfun.StringtoDataTable(jsonEmpGallery));
+                            sqlTransaction.Commit();
+                        }
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        sqlTransaction.Rollback();
+                        return false;
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+                }
+            }
+            return false;
+        }
+    }
+}

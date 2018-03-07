@@ -1,0 +1,291 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+
+namespace NuPortalWebservice
+{
+    public class Constants
+    {
+        //Service Employee and Home
+
+        public const string connection = "Connection";
+        public const string paramId = "@Id";
+        //function LoginInfo  
+        public const string getLoginInfo = "UspGetLoginInfo";
+        public const string paramUserName = "@UserName";
+        public const string ParamPassword = "@Password";
+        public const string loginInfoTable = "LoginInfoTable";
+        //function CreateEmployee
+        public const string setEmployeeInfo = "UspSetEmployeeInfo"; 
+        public const string UspSetJoinedEmployeeInfo = "UspSetJoinedEmployeeInfo";
+        public const string updateEmployeeInfo = "UspUpdateEmployeeInfo";
+        public const string EmployeeOperation = "UspEmployeeOper";
+        public const string paramFKNewAppId = "@FK_NewAppId";
+        public const string paramFirstName = "@FirstName";
+        public const string ParamLastName = "@LastName";
+        public const string paramTitle = "@Title";
+        public const string ParamEmployeeCode = "@EmployeeCode";
+        public const string paramJobTitle = "@JobTitle";
+        public const string ParamManager = "@Manager";
+        public const string paramProfilePicUrl = "@ProfilePicUrl";
+        public const string paramQuotesPictureUrl = "@QuotesPictureUrl";
+        public const string paramBackGroundPicUrl = "@BackGroundPicUrl";
+        public const string ParamHireDate = "@HireDate";
+        public const string paramConfirmationDate = "@ConfirmationDate";
+        public const string ParamWorkEmail = "@WorkEmail";
+        public const string paramOfficeLocation = "@OfficeLocation";
+        public const string ParamWorkLocation = "@WorkLocation";
+        public const string paramEmptTypeId = "@EmptTypeId";
+        public const string ParamRelievingDate = "@RelievingDate";
+        public const string paramCompanyId = "@CompanyId"; 
+        public const string paramFkEmpStatus = "@FkEmpStatus";
+        public const string ParamCreatedDate = "@CreatedDate";
+        public const string paramModifiedDate = "@ModifiedDate";
+        public const string ParamCreatedEmpID = "@CreatedEmpID";
+        public const string paramModifiedEmpID = "@ModifiedEmpID";
+        public const string paramWeekOffDays = "@WeekOffDays";
+        public const string ParamStartTime = "@StartTime";
+        public const string paramEndTime = "@EndTime";
+        public const string paramQuotesText = "@QuotesText";
+        public const string EmployeeTable = "EmployeeTable";
+        public const string paramFk_TypeOfVisa = "@Fk_TypeOfVisa";
+        public const string paramInsurancePaidBy = "@InsurancePaidBy";
+        public const string ParamVisaExpiryDate = "@VisaExpiryDate";
+        public const string paramInsuranceAmount = "@InsuranceAmount";
+        public const string paramFk_SalaryType = "@Fk_SalaryType";
+        public const string ParamIsUSBench = "@IsUSBench";
+        public const string paramIsCancelled = "@IsCancelled";
+        public const string paramFk_HR = "@Fk_HR";
+        public const string paramIsVisa = "@IsVisa";
+        public const string paramRate= "@Rate";
+        //function SetPersonalInfo
+        public const string setPersonalInfo = "UspSetPersonalInfo";
+        public const string UpdatePersonalInfo = "UspUpdatePersonalInfo";
+        public const string paramFKEmpId = "@FK_EmpId";
+        public const string ParamAddress1 = "@Address1";
+        public const string paramCity1 = "@City1";
+        public const string ParamState1 = "@State1";
+        public const string paramCountry1 = "@Country1";
+        public const string ParamZipCode1 = "@ZipCode1";
+        public const string paramPhone1 = "@Phone1";
+        public const string ParamAddress2 = "@Address2";
+        public const string paramCity2 = "@City2";
+        public const string ParamState2 = "@State2";
+        public const string paramCountry2 = "@Country2";
+        public const string ParamZipCode2 = "@ZipCode2";
+        public const string paramPhone2 = "@Phone2";
+        public const string ParamEmergencyPhone = "@EmergencyPhone";
+        public const string paramEmailId = "@EmailId";
+        public const string ParamDOB = "@DOB";
+        public const string paramGender = "@Gender";
+        public const string paramNationality = "@Nationality";
+        public const string paramBloodGroup = "@BloodGroup";
+        public const string paramReturnVal = "@ReturnVal";
+        //function SetAcademic
+        public const string tblAcademic = "dbo.tblAcademic";
+        public const string colEmpID = "FK_EmpID";
+        public const string colSchool = "School";
+        public const string colCourse = "Course";
+        public const string colMajor = "Major";
+        public const string colMinor = "Minor";
+        public const string colPerMarks = "PerMarks";
+        public const string colUniversity = "University";
+        public const string colCourseCompletion = "CourseCompletion";
+        public const string colYearofPassing = "YearofPassing";
+        public const string colGrade = "Grade";
+        public const string colCreatedDate = "CreatedDate";
+        public const string colModifiedDate = "ModifiedDate";
+        public const string colCreatedEmpID = "CreatedEmpID";
+        public const string colModifiedEmpID = "ModifiedEmpID";
+        public const string EmpId = "FKEmpID";
+        public const string School = "School";
+        public const string Course = "Course";
+        public const string Major = "Major";
+        public const string Minor = "Minor";
+        public const string PerMarks = "PerMarks";
+        public const string University = "University";
+        public const string CourseCompletion = "CourseCompletion";
+        public const string YearofPassing = "YearofPassing";
+        public const string Grade = "Grade";
+        public const string CreatedDate = "CreatedDate";
+        public const string ModifiedDate = "ModifiedDate";
+        public const string CreatedEmpID = "CreatedEmpID";
+        public const string ModifiedEmpID = "ModifiedEmpID";
+        //fuction setIdentityDetails
+        public const string colEmpId = "FK_EmpId";
+        public const string tblIdentityDetails = "dbo.tblIdentityDetails";
+        public const string colIdentityType = "FKIdentityTypeId";
+        public const string colIdentityNumber = "IdentityNumber";
+        public const string colIdentityFilePath = "Attachments";
+        public const string IdentityType = "IdentityType";
+        public const string IdentityNumber = "IdentityNumber";
+        public const string IdentityFilePath = "IdentityFilePath";
+        //fuction setExperience
+        public const string tblExperience = "dbo.tblExperience";
+        public const string colCompanyName = "CompanyName";
+        public const string colDesignation = "Desgination";
+        public const string colTeamSize = "TeamSize";
+        public const string colRoles = "Roles";
+        public const string colNoOfMonths = "NoOfMonths";
+        public const string colReasonForLeaving = "ReasonForLeaving";
+        public const string colStartDate = "StartDate";
+        public const string colEndDate = "EndDate";
+        public const string colTechnologies = "Technologies";
+        public const string colDomain = "Domain";
+        public const string colAttachmentPaths = "Attachments";
+        public const string CompanyName = "CompanyName";
+        public const string Designation = "Designation";
+        public const string TeamSize = "TeamSize";
+        public const string Roles = "Roles";
+        public const string NoOfMonths = "NoOfMonths";
+        public const string ReasonForLeaving = "ReasonForLeaving";
+        public const string StartDate = "StartDate";
+        public const string EndDate = "EndDate";
+        public const string Technologies = "Technologies";
+        public const string Domain = "Domain";
+        public const string AttachmentPaths = "AttachmentPaths";
+        //fuction setCompetency
+        public const string tblCompetency = "dbo.tblCompetency";
+        public const string colCompetencyType = "CompetencyType";
+        public const string colCompetencyValue = "CompetencyValue";
+        public const string CompetencyType = "CompetencyType";
+        public const string CompetencyValue = "CompetencyValue";
+        //fuction DDListBox
+        public const string getDDLBox = "UspGetDDLBox";
+        public const string paramOperId = "@Operation";
+        public const string ddlTable = "DDLBoxTable";
+        //function GetEmployeeProfileCompleted
+        public const string getEmployeeProfileCompleted = "UspEmployeeProfileCompleted";
+        public const string employeeProfileCompletedTable = "EmployeeProfileCompletedTable";
+        //fuction ManagerAutoComplete
+        public const string getAutoComplete = "UspAutoComplete";
+        public const string paramEmpName = "@empName";
+        public const string paramCompId = "@compId";
+
+        //Service Project
+
+        //function CreateClient
+        public const string setClientInfoOper = "UspClientInfoOper";
+        public const string UpdateClientInfo = "UspUpdateClientInfo";
+        public const string paramClientId = "@ClientId";
+        public const string paramCompanyLogo = "@CompanyLogo";
+        public const string ParamCompanyName = "@CompanyName";
+        public const string paramFKCompanyId = "@FK_CompanyId";
+        public const string ParamPurchaseOrderNumber = "@PurchaseOrderNumber";
+        public const string paramWebsite = "@Website";
+        public const string paramStatus = "@Status";
+        //function SetClientAddress
+        public const string tblClientAddress = "dbo.tblClientAddress";
+        public const string colFKClientId = "FK_ClientId";
+        public const string colAddressType = "AddressType";
+        public const string colAddress = "Address";
+        public const string colCity = "City";
+        public const string colState = "State";
+        public const string colCountry = "Country";
+        public const string colZip = "Zip";
+        public const string colPhone = "Phone";
+        public const string colFax = "Fax";
+        public const string ClientId = "ClientId";
+        public const string AddressType = "AddressType";
+        public const string Address = "Address";
+        public const string City = "City";
+        public const string State = "State";
+        public const string Country = "Country";
+        public const string Zip = "Zip";
+        public const string Phone = "Phone";
+        public const string Fax = "Fax";
+        //function CreateContact
+        public const string setProjectContactPersonOper = "UspProjectContactPersonOper";
+        public const string UpdateProjectContactPerson = "UspUpdateProjectContactPerson";
+        public const string paramContactId = "@ContactId";
+        public const string paramContactNumber = "@ContactNumber";
+        public const string ParamContactPerson = "@ContactPerson";
+        public const string paramDepartment = "@Department";
+        public const string ParamDesignation = "@Designation";
+        public const string paramEmail = "@Email";
+        public const string paramExtension = "@Extension";
+        public const string ParamFax = "@Fax";
+        public const string paramFKClientId = "@FK_ClientId";
+        public const string ParamMobile = "@Mobile";
+        //function CreateProject
+        public const string UspSetProjects = "UspSetProjects";
+        public const string UpdateProjects = "UspUpdateProjects";
+        public const string paramProjectId = "@ProjectId";
+        public const string paramAttachments = "@Attachments";
+        public const string ParamCostCenter = "@CostCenter";
+        public const string paramDescription = "@Description";
+        public const string ParamEndDate = "@EndDate";
+        public const string paramFKContactId = "@FK_ContactId";
+        public const string paramFKDepartment = "@FK_Department";
+        public const string ParamName = "@Name";
+        public const string paramPlannedHours = "@PlannedHours";
+        public const string ParamPriority = "@Priority";
+        public const string paramProjectCategory = "@ProjectCategory";
+        public const string ParamProjectStatus = "@ProjectStatus";
+        public const string paramProjectType = "@ProjectType";
+        public const string ParamStartDate = "@StartDate";
+        public const string paramTechnologies = "@Technologies";
+        public const string ParamURL = "@URL";
+        //function SetMangersForProjects
+        public const string tblMangersForProjects = "dbo.tblMangersForProjects";
+        public const string colFKProjectId = "FK_ProjectId";
+        public const string colFKManagers = "FK_Managers";
+        public const string colStatus = "Status";
+        public const string ProjectId = "FKProjectId";
+        public const string Managers = "FKManagers";
+        public const string Status = "Status";
+        //function tblResourcesForProjects
+        public const string tblResourcesForProjects = "dbo.tblResourcesForProjects";
+        public const string colFKResources = "FK_Resources";
+        public const string colFKRole = "FK_RoleId";
+        public const string colRatePerHour = "RatePerHour";
+        public const string colAllocation = "Allocation";
+        public const string colBillingStatus = "BillingStatus";
+        public const string colBillingHours = "BillingHours";
+        public const string FKResources = "FKResources";
+        public const string FKRole = "FKRole";
+        public const string RatePerHour = "RatePerHour";
+        public const string Allocation = "Allocation";
+        public const string BillingStatus = "BillingStatus";
+        public const string BillingHours = "BillingHours";
+
+        //function SelectGridInfo
+        public const string GridOperation = "UspGridOperations";
+
+        //function GetTimeSheetReport
+        //function tblResourcesForProjects
+        public const string GetTimeSheetReport = "UspGetTimeSheetReport";
+        public const string XmlDataToDb = "@XmlInputString";
+
+        //function SelectTaskDetailsByMonth
+        public const string GetTaskDetailsByMonth = "UspGetTaskDetails";
+        public const string paramMonth = "@month";
+        public const string paramYear = "@year";
+
+        //function cancel item
+        public const string CancelItem = "UspCancelDeleteItem";
+
+        //Function UpdateExitInterview
+        public const string UspUpdateExitInterview = "UspExitInterview";
+
+        //Function for employee rating
+        public const string UspUpdateEmpRating = "UspCreateEmpRating";
+        public const string paramComments = "@Comments";
+        public const string paramRatedBy = "@FK_RatedBy";
+        public const string paramRating = "@Rating";
+        public const string paramRatingFactor = "@RatingFactor";
+
+        //Grid filter
+        public const string UspFilterGrid = "UspFilterGrids";
+        public const string paramOffset = "@Offset";
+        public const string paramRowCount = "@RowCount";
+
+        //function Change Password  
+        public const string UspChangePassword = "UspChangePassword";
+        public const string paramOldPassword = "@OldPassword";
+        public const string ParamNewPassword = "@NewPassword";
+    }
+}
